@@ -1,69 +1,157 @@
-const API_URL = "https://analise-demografica-ibge.onrender.com";
+const API = "https://analise-demografica-ibge.onrender.com"; // ajuste se necessário
 
+const nomeInput = document.getElementById("nome");
+const idadeInput = document.getElementById("idade");
 const lista = document.getElementById("lista");
-const btnSalvar = document.getElementById("btnSalvar");
 
-btnSalvar.addEventListener("click", salvarPessoa);
+// ===============================
+// CARREGAR PESSOAS
+// ===============================
+function carregarPessoas() {
+    fetch(`${API}/pessoas`)
+        .then(res => res.json())
+        .then(data => {
+            lista.innerHTML = "";
 
-async function listarPessoas() {
-    const response = await fetch(`${API_URL}/pessoas`);
-    const pessoas = await response.json();
+            data.forEach(pessoa => {
+                const div = document.createElement("div");
+                div.classList.add("item");
+                div.dataset.id = pessoa.id;
 
-    lista.innerHTML = "";
+                div.innerHTML = `
+                    <span class="info">
+                        <strong class="nome">${pessoa.nome}</strong> - 
+                        <span class="idade">${pessoa.idade}</span> anos
+                    </span>
 
-    pessoas.forEach(p => {
-        const li = document.createElement("li");
+                    <div class="botoes">
+                        <button class="btn-editar">Editar</button>
+                        <button class="btn-excluir">Excluir</button>
+                    </div>
+                `;
 
-        li.innerHTML = `
-            <span><strong>${p.nome}</strong> - ${p.idade} anos - ${p.cidade}</span>
-            <div class="actions">
-                <button onclick="editarPessoa(${p.id}, '${p.nome}', ${p.idade}, '${p.cidade}')">Editar</button>
-                <button onclick="deletarPessoa(${p.id})">Excluir</button>
-            </div>
-        `;
+                lista.appendChild(div);
+            });
 
-        lista.appendChild(li);
+            adicionarEventos();
+        });
+}
+
+// ===============================
+// ADICIONAR EVENTOS NOS BOTÕES
+// ===============================
+function adicionarEventos() {
+    document.querySelectorAll(".btn-editar").forEach(btn => {
+        btn.addEventListener("click", iniciarEdicao);
+    });
+
+    document.querySelectorAll(".btn-excluir").forEach(btn => {
+        btn.addEventListener("click", excluirPessoa);
     });
 }
 
-function editarPessoa(id, nome, idade, cidade) {
-    document.getElementById("pessoaId").value = id;
-    document.getElementById("nome").value = nome;
-    document.getElementById("idade").value = idade;
-    document.getElementById("cidade").value = cidade;
-    btnSalvar.innerText = "Atualizar";
-}
+// ===============================
+// CADASTRAR
+// ===============================
+function cadastrarPessoa() {
+    const nome = nomeInput.value.trim();
+    const idade = idadeInput.value.trim();
 
-async function salvarPessoa() {
-    const id = document.getElementById("pessoaId").value;
-    const nome = document.getElementById("nome").value;
-    const idade = parseInt(document.getElementById("idade").value);
-    const cidade = document.getElementById("cidade").value;
+    if (!nome || !idade) {
+        alert("Preencha todos os campos!");
+        return;
+    }
 
-    const metodo = id ? "PUT" : "POST";
-    const url = id ? `${API_URL}/pessoas/${id}` : `${API_URL}/pessoas`;
-
-    await fetch(url, {
-        method: metodo,
+    fetch(`${API}/pessoas`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome, idade, cidade })
+        body: JSON.stringify({ nome, idade })
+    })
+    .then(() => {
+        nomeInput.value = "";
+        idadeInput.value = "";
+        carregarPessoas();
     });
-
-    limparFormulario();
-    listarPessoas();
 }
 
-async function deletarPessoa(id) {
-    await fetch(`${API_URL}/pessoas/${id}`, { method: "DELETE" });
-    listarPessoas();
+// ENTER para cadastrar
+idadeInput.addEventListener("keydown", e => {
+    if (e.key === "Enter") {
+        cadastrarPessoa();
+    }
+});
+
+// ===============================
+// INICIAR EDIÇÃO INLINE
+// ===============================
+function iniciarEdicao(e) {
+    const item = e.target.closest(".item");
+    const id = item.dataset.id;
+
+    const nomeEl = item.querySelector(".nome");
+    const idadeEl = item.querySelector(".idade");
+
+    const nomeAtual = nomeEl.textContent;
+    const idadeAtual = idadeEl.textContent;
+
+    item.querySelector(".info").innerHTML = `
+        <input type="text" class="edit-nome" value="${nomeAtual}">
+        <input type="number" class="edit-idade" value="${idadeAtual}" min="0">
+    `;
+
+    const inputNome = item.querySelector(".edit-nome");
+    const inputIdade = item.querySelector(".edit-idade");
+
+    inputNome.focus();
+
+    // ENTER confirma
+    item.addEventListener("keydown", function handler(event) {
+        if (event.key === "Enter") {
+            confirmarEdicao(id, inputNome.value, inputIdade.value);
+            item.removeEventListener("keydown", handler);
+        }
+
+        if (event.key === "Escape") {
+            carregarPessoas();
+            item.removeEventListener("keydown", handler);
+        }
+    });
 }
 
-function limparFormulario() {
-    document.getElementById("pessoaId").value = "";
-    document.getElementById("nome").value = "";
-    document.getElementById("idade").value = "";
-    document.getElementById("cidade").value = "";
-    btnSalvar.innerText = "Cadastrar";
+// ===============================
+// CONFIRMAR EDIÇÃO
+// ===============================
+function confirmarEdicao(id, novoNome, novaIdade) {
+    if (!novoNome || !novaIdade) {
+        alert("Campos inválidos.");
+        return;
+    }
+
+    fetch(`${API}/pessoas/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            nome: novoNome,
+            idade: novaIdade
+        })
+    })
+    .then(() => carregarPessoas());
 }
 
-listarPessoas();
+// ===============================
+// EXCLUIR
+// ===============================
+function excluirPessoa(e) {
+    const item = e.target.closest(".item");
+    const id = item.dataset.id;
+
+    if (confirm("Tem certeza que deseja excluir?")) {
+        fetch(`${API}/pessoas/${id}`, {
+            method: "DELETE"
+        })
+        .then(() => carregarPessoas());
+    }
+}
+
+// ===============================
+carregarPessoas();
