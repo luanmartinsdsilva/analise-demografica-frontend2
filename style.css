@@ -1,80 +1,138 @@
-body {
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
+* {
     margin: 0;
     padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #1e293b, #0f172a);
     display: flex;
     justify-content: center;
+    padding: 40px;
+    color: #fff;
 }
 
 .container {
-    background: white;
-    margin-top: 40px;
+    width: 100%;
+    max-width: 600px;
+    background: #1e293b;
     padding: 30px;
-    border-radius: 12px;
-    width: 500px;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    animation: fadeIn 0.6s ease;
 }
 
 h1 {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 25px;
+    font-weight: 600;
 }
 
-input, button {
+input {
+    width: 48%;
     padding: 10px;
-    margin: 5px 0;
-    width: 100%;
-    border-radius: 6px;
-    border: 1px solid #ccc;
-    font-size: 14px;
+    border-radius: 8px;
+    border: none;
+    margin-bottom: 15px;
+    outline: none;
+    transition: 0.2s;
+}
+
+input:focus {
+    box-shadow: 0 0 0 2px #3b82f6;
 }
 
 button {
-    cursor: pointer;
-    background-color: #2a5298;
-    color: white;
+    padding: 8px 14px;
+    border-radius: 8px;
     border: none;
-    transition: 0.3s;
+    cursor: pointer;
+    transition: 0.2s;
 }
 
-button:hover {
-    background-color: #1e3c72;
+.btn-add {
+    width: 100%;
+    background: #3b82f6;
+    color: white;
+    margin-bottom: 20px;
 }
 
-.lista {
-    margin-top: 20px;
+.btn-add:hover {
+    background: #2563eb;
 }
 
 .item {
-    background: #f5f5f5;
-    padding: 10px;
-    border-radius: 6px;
-    margin-bottom: 10px;
+    background: #0f172a;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 12px;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    transition: 0.3s;
+    animation: slideIn 0.3s ease;
+}
+
+.item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
 }
 
 .botoes button {
-    width: auto;
-    margin-left: 5px;
-    padding: 6px 10px;
-    font-size: 12px;
+    margin-left: 8px;
 }
 
 .btn-editar {
-    background-color: #f0ad4e;
-}
-
-.btn-excluir {
-    background-color: #d9534f;
+    background: #facc15;
 }
 
 .btn-editar:hover {
-    background-color: #ec971f;
+    background: #eab308;
+}
+
+.btn-excluir {
+    background: #ef4444;
+    color: white;
 }
 
 .btn-excluir:hover {
-    background-color: #c9302c;
+    background: #dc2626;
+}
+
+.success {
+    animation: pulse 0.5s ease;
+}
+
+/* =================== */
+/* ANIMAÇÕES */
+/* =================== */
+
+@keyframes fadeIn {
+    from { opacity: 0 }
+    to { opacity: 1 }
+}
+
+@keyframes slideIn {
+    from { 
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes slideOut {
+    to {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(59,130,246,0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(59,130,246,0); }
+    100% { box-shadow: 0 0 0 0 rgba(59,130,246,0); }
 }

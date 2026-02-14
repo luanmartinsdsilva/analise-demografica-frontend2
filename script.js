@@ -1,11 +1,11 @@
-const API = "https://analise-demografica-ibge.onrender.com"; // ajuste se necessário
+const API = "https://analise-demografica-ibge.onrender.com";
 
 const nomeInput = document.getElementById("nome");
 const idadeInput = document.getElementById("idade");
 const lista = document.getElementById("lista");
 
 // ===============================
-// CARREGAR PESSOAS
+// CARREGAR
 // ===============================
 function carregarPessoas() {
     fetch(`${API}/pessoas`)
@@ -14,40 +14,36 @@ function carregarPessoas() {
             lista.innerHTML = "";
 
             data.forEach(pessoa => {
-                const div = document.createElement("div");
-                div.classList.add("item");
-                div.dataset.id = pessoa.id;
-
-                div.innerHTML = `
-                    <span class="info">
-                        <strong class="nome">${pessoa.nome}</strong> - 
-                        <span class="idade">${pessoa.idade}</span> anos
-                    </span>
-
-                    <div class="botoes">
-                        <button class="btn-editar">Editar</button>
-                        <button class="btn-excluir">Excluir</button>
-                    </div>
-                `;
-
+                const div = criarItem(pessoa);
                 lista.appendChild(div);
             });
-
-            adicionarEventos();
         });
 }
 
 // ===============================
-// ADICIONAR EVENTOS NOS BOTÕES
+// CRIAR ITEM
 // ===============================
-function adicionarEventos() {
-    document.querySelectorAll(".btn-editar").forEach(btn => {
-        btn.addEventListener("click", iniciarEdicao);
-    });
+function criarItem(pessoa) {
+    const div = document.createElement("div");
+    div.classList.add("item");
+    div.dataset.id = pessoa.id;
 
-    document.querySelectorAll(".btn-excluir").forEach(btn => {
-        btn.addEventListener("click", excluirPessoa);
-    });
+    div.innerHTML = `
+        <span class="info">
+            <strong class="nome">${pessoa.nome}</strong> - 
+            <span class="idade">${pessoa.idade}</span> anos
+        </span>
+
+        <div class="botoes">
+            <button class="btn-editar">Editar</button>
+            <button class="btn-excluir">Excluir</button>
+        </div>
+    `;
+
+    div.querySelector(".btn-editar").addEventListener("click", iniciarEdicao);
+    div.querySelector(".btn-excluir").addEventListener("click", excluirPessoa);
+
+    return div;
 }
 
 // ===============================
@@ -67,36 +63,34 @@ function cadastrarPessoa() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ nome, idade })
     })
-    .then(() => {
+    .then(res => res.json())
+    .then(novaPessoa => {
+        const novoItem = criarItem(novaPessoa);
+        lista.prepend(novoItem);
+        novoItem.classList.add("success");
+
         nomeInput.value = "";
         idadeInput.value = "";
-        carregarPessoas();
     });
 }
 
-// ENTER para cadastrar
 idadeInput.addEventListener("keydown", e => {
-    if (e.key === "Enter") {
-        cadastrarPessoa();
-    }
+    if (e.key === "Enter") cadastrarPessoa();
 });
 
 // ===============================
-// INICIAR EDIÇÃO INLINE
+// EDIÇÃO INLINE
 // ===============================
 function iniciarEdicao(e) {
     const item = e.target.closest(".item");
     const id = item.dataset.id;
 
-    const nomeEl = item.querySelector(".nome");
-    const idadeEl = item.querySelector(".idade");
+    const nomeAtual = item.querySelector(".nome").textContent;
+    const idadeAtual = item.querySelector(".idade").textContent;
 
-    const nomeAtual = nomeEl.textContent;
-    const idadeAtual = idadeEl.textContent;
-
-    item.querySelector(".info").innerHTML = `
+    item.innerHTML = `
         <input type="text" class="edit-nome" value="${nomeAtual}">
-        <input type="number" class="edit-idade" value="${idadeAtual}" min="0">
+        <input type="number" class="edit-idade" value="${idadeAtual}">
     `;
 
     const inputNome = item.querySelector(".edit-nome");
@@ -104,7 +98,6 @@ function iniciarEdicao(e) {
 
     inputNome.focus();
 
-    // ENTER confirma
     item.addEventListener("keydown", function handler(event) {
         if (event.key === "Enter") {
             confirmarEdicao(id, inputNome.value, inputIdade.value);
@@ -121,37 +114,32 @@ function iniciarEdicao(e) {
 // ===============================
 // CONFIRMAR EDIÇÃO
 // ===============================
-function confirmarEdicao(id, novoNome, novaIdade) {
-    if (!novoNome || !novaIdade) {
-        alert("Campos inválidos.");
-        return;
-    }
-
+function confirmarEdicao(id, nome, idade) {
     fetch(`${API}/pessoas/${id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-            nome: novoNome,
-            idade: novaIdade
-        })
+        body: JSON.stringify({ nome, idade })
     })
     .then(() => carregarPessoas());
 }
 
 // ===============================
-// EXCLUIR
+// EXCLUIR COM ANIMAÇÃO
 // ===============================
 function excluirPessoa(e) {
     const item = e.target.closest(".item");
     const id = item.dataset.id;
 
-    if (confirm("Tem certeza que deseja excluir?")) {
-        fetch(`${API}/pessoas/${id}`, {
-            method: "DELETE"
-        })
-        .then(() => carregarPessoas());
+    if (confirm("Deseja realmente excluir?")) {
+        item.style.animation = "slideOut 0.3s forwards";
+
+        setTimeout(() => {
+            fetch(`${API}/pessoas/${id}`, {
+                method: "DELETE"
+            })
+            .then(() => item.remove());
+        }, 300);
     }
 }
 
-// ===============================
 carregarPessoas();
