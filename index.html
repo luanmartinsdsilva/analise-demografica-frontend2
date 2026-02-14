@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema Demográfico</title>
     <link rel="stylesheet" href="style.css">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -12,42 +15,49 @@
 
     <h1>Sistema Demográfico</h1>
 
+    <!-- FORM -->
     <div class="form-area">
-        <input type="hidden" id="pessoaId">
-
         <input type="text" id="nome" placeholder="Nome">
         <input type="number" id="idade" placeholder="Idade">
         <input type="text" id="cidade" placeholder="Cidade">
-
         <button id="btnSalvar">Cadastrar</button>
     </div>
 
     <div id="mensagem"></div>
 
-    <h2>Dashboard</h2>
+    <!-- FILTRO -->
+    <h2>Filtro</h2>
+    <div class="filtro-area">
+        <input type="text" id="filtroNome" placeholder="Buscar por nome">
+        <input type="text" id="filtroCidade" placeholder="Filtrar por cidade">
+    </div>
 
+    <!-- DASHBOARD -->
+    <h2>Dashboard</h2>
     <div class="dashboard">
         <div class="card">
             <h3>Total</h3>
             <p id="totalPessoas">0</p>
         </div>
-
         <div class="card">
-            <h3>Média de Idade</h3>
+            <h3>Média</h3>
             <p id="mediaIdade">0</p>
         </div>
-
         <div class="card">
             <h3>Mais Velha</h3>
             <p id="maisVelha">-</p>
         </div>
-
         <div class="card">
             <h3>Mais Nova</h3>
             <p id="maisNova">-</p>
         </div>
     </div>
 
+    <!-- GRÁFICO -->
+    <h2>Distribuição de Idades</h2>
+    <canvas id="graficoIdades"></canvas>
+
+    <!-- LISTA -->
     <h2>Pessoas Cadastradas</h2>
     <ul id="lista"></ul>
 
