@@ -14,12 +14,29 @@ const mediaEl = document.getElementById("mediaIdade");
 const maisVelhaEl = document.getElementById("maisVelha");
 const maisNovaEl = document.getElementById("maisNova");
 
-let grafico;
+let grafico = null;
 
-// EVENTOS
+/* =========================
+   EVENTOS
+========================= */
+
 btnSalvar.addEventListener("click", cadastrarPessoa);
+
+// ENTER para cadastrar
+[nomeInput, idadeInput, cidadeInput].forEach(input => {
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") {
+            cadastrarPessoa();
+        }
+    });
+});
+
 filtroNome.addEventListener("input", carregarPessoas);
 filtroCidade.addEventListener("input", carregarPessoas);
+
+/* =========================
+   CADASTRAR
+========================= */
 
 function cadastrarPessoa() {
     const nome = nomeInput.value.trim();
@@ -30,15 +47,33 @@ function cadastrarPessoa() {
 
     fetch(`${API}/pessoas`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nome, idade, cidade })
-    }).then(() => {
-        nomeInput.value = "";
-        idadeInput.value = "";
-        cidadeInput.value = "";
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            nome,
+            idade: Number(idade),
+            cidade
+        })
+    })
+    .then(res => res.json())
+    .then(() => {
+        limparFormulario();
         carregarPessoas();
-    });
+    })
+    .catch(err => console.error("Erro ao cadastrar:", err));
 }
+
+function limparFormulario() {
+    nomeInput.value = "";
+    idadeInput.value = "";
+    cidadeInput.value = "";
+    nomeInput.focus();
+}
+
+/* =========================
+   CARREGAR + FILTRAR
+========================= */
 
 function carregarPessoas() {
     fetch(`${API}/pessoas`)
@@ -53,21 +88,39 @@ function carregarPessoas() {
                 p.cidade.toLowerCase().includes(cidadeFiltro)
             );
 
+            renderLista(filtrados);
             atualizarDashboard(filtrados);
             atualizarGrafico(filtrados);
-
-            lista.innerHTML = "";
-
-            filtrados.forEach(pessoa => {
-                const li = document.createElement("li");
-                li.classList.add("item");
-                li.innerHTML = `
-                    <span><strong>${pessoa.nome}</strong> - ${pessoa.idade} anos - ${pessoa.cidade}</span>
-                `;
-                lista.appendChild(li);
-            });
-        });
+        })
+        .catch(err => console.error("Erro ao carregar:", err));
 }
+
+/* =========================
+   RENDER LISTA
+========================= */
+
+function renderLista(data) {
+    lista.innerHTML = "";
+
+    data.forEach(pessoa => {
+        const li = document.createElement("li");
+        li.classList.add("item");
+
+        li.innerHTML = `
+            <span>
+                <strong>${pessoa.nome}</strong> - 
+                ${pessoa.idade} anos - 
+                ${pessoa.cidade}
+            </span>
+        `;
+
+        lista.appendChild(li);
+    });
+}
+
+/* =========================
+   DASHBOARD
+========================= */
 
 function atualizarDashboard(data) {
     if (data.length === 0) {
@@ -84,8 +137,14 @@ function atualizarDashboard(data) {
 
     data.forEach(p => {
         soma += Number(p.idade);
-        if (p.idade > maisVelha.idade) maisVelha = p;
-        if (p.idade < maisNova.idade) maisNova = p;
+
+        if (p.idade > maisVelha.idade) {
+            maisVelha = p;
+        }
+
+        if (p.idade < maisNova.idade) {
+            maisNova = p;
+        }
     });
 
     totalEl.innerText = data.length;
@@ -94,13 +153,19 @@ function atualizarDashboard(data) {
     maisNovaEl.innerText = `${maisNova.nome} (${maisNova.idade})`;
 }
 
+/* =========================
+   GRÁFICO
+========================= */
+
 function atualizarGrafico(data) {
     const ctx = document.getElementById("graficoIdades");
 
     const labels = data.map(p => p.nome);
     const idades = data.map(p => p.idade);
 
-    if (grafico) grafico.destroy();
+    if (grafico) {
+        grafico.destroy();
+    }
 
     grafico = new Chart(ctx, {
         type: "bar",
@@ -108,15 +173,33 @@ function atualizarGrafico(data) {
             labels: labels,
             datasets: [{
                 label: "Idade",
-                data: idades
+                data: idades,
+                backgroundColor: "rgba(99,102,241,0.6)",
+                borderRadius: 8
             }]
         },
         options: {
+            responsive: true,
             animation: {
-                duration: 1000
+                duration: 1200,
+                easing: "easeOutQuart"
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
             }
         }
     });
 }
+
+/* =========================
+   INICIAR
+========================= */
 
 carregarPessoas();
