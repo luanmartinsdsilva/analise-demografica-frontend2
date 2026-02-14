@@ -15,19 +15,17 @@ const maisVelhaEl = document.getElementById("maisVelha");
 const maisNovaEl = document.getElementById("maisNova");
 
 let grafico = null;
+let editandoId = null;
 
 /* =========================
    EVENTOS
 ========================= */
 
-btnSalvar.addEventListener("click", cadastrarPessoa);
+btnSalvar.addEventListener("click", salvarPessoa);
 
-// ENTER para cadastrar
 [nomeInput, idadeInput, cidadeInput].forEach(input => {
     input.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-            cadastrarPessoa();
-        }
+        if (e.key === "Enter") salvarPessoa();
     });
 });
 
@@ -35,40 +33,43 @@ filtroNome.addEventListener("input", carregarPessoas);
 filtroCidade.addEventListener("input", carregarPessoas);
 
 /* =========================
-   CADASTRAR
+   SALVAR (POST ou PUT)
 ========================= */
 
-function cadastrarPessoa() {
+function salvarPessoa() {
     const nome = nomeInput.value.trim();
     const idade = idadeInput.value.trim();
     const cidade = cidadeInput.value.trim();
 
     if (!nome || !idade || !cidade) return;
 
-    fetch(`${API}/pessoas`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+    const metodo = editandoId ? "PUT" : "POST";
+    const url = editandoId 
+        ? `${API}/pessoas/${editandoId}`
+        : `${API}/pessoas`;
+
+    fetch(url, {
+        method: metodo,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
             nome,
             idade: Number(idade),
             cidade
         })
     })
-    .then(res => res.json())
     .then(() => {
         limparFormulario();
         carregarPessoas();
     })
-    .catch(err => console.error("Erro ao cadastrar:", err));
+    .catch(err => console.error("Erro:", err));
 }
 
 function limparFormulario() {
     nomeInput.value = "";
     idadeInput.value = "";
     cidadeInput.value = "";
-    nomeInput.focus();
+    editandoId = null;
+    btnSalvar.innerText = "Cadastrar";
 }
 
 /* =========================
@@ -96,7 +97,7 @@ function carregarPessoas() {
 }
 
 /* =========================
-   RENDER LISTA
+   LISTA (COM BOTÕES)
 ========================= */
 
 function renderLista(data) {
@@ -112,7 +113,31 @@ function renderLista(data) {
                 ${pessoa.idade} anos - 
                 ${pessoa.cidade}
             </span>
+            <div>
+                <button class="btn-editar">Editar</button>
+                <button class="btn-excluir">Excluir</button>
+            </div>
         `;
+
+        // EDITAR
+        li.querySelector(".btn-editar").addEventListener("click", () => {
+            nomeInput.value = pessoa.nome;
+            idadeInput.value = pessoa.idade;
+            cidadeInput.value = pessoa.cidade;
+            editandoId = pessoa.id;
+            btnSalvar.innerText = "Atualizar";
+        });
+
+        // EXCLUIR
+        li.querySelector(".btn-excluir").addEventListener("click", () => {
+            if (confirm(`Excluir ${pessoa.nome}?`)) {
+                fetch(`${API}/pessoas/${pessoa.id}`, {
+                    method: "DELETE"
+                })
+                .then(() => carregarPessoas())
+                .catch(err => console.error("Erro ao excluir:", err));
+            }
+        });
 
         lista.appendChild(li);
     });
@@ -138,13 +163,8 @@ function atualizarDashboard(data) {
     data.forEach(p => {
         soma += Number(p.idade);
 
-        if (p.idade > maisVelha.idade) {
-            maisVelha = p;
-        }
-
-        if (p.idade < maisNova.idade) {
-            maisNova = p;
-        }
+        if (p.idade > maisVelha.idade) maisVelha = p;
+        if (p.idade < maisNova.idade) maisNova = p;
     });
 
     totalEl.innerText = data.length;
@@ -163,16 +183,13 @@ function atualizarGrafico(data) {
     const labels = data.map(p => p.nome);
     const idades = data.map(p => p.idade);
 
-    if (grafico) {
-        grafico.destroy();
-    }
+    if (grafico) grafico.destroy();
 
     grafico = new Chart(ctx, {
         type: "bar",
         data: {
-            labels: labels,
+            labels,
             datasets: [{
-                label: "Idade",
                 data: idades,
                 backgroundColor: "rgba(99,102,241,0.6)",
                 borderRadius: 8
@@ -184,16 +201,8 @@ function atualizarGrafico(data) {
                 duration: 1200,
                 easing: "easeOutQuart"
             },
-            plugins: {
-                legend: {
-                    display: false
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
         }
     });
 }
