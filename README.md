@@ -1,13 +1,22 @@
 # 📊 Análise Demográfica IBGE
 
-Sistema full stack para cadastro e análise de dados demográficos, com dashboard interativo e gráfico dinâmico.
+![Python](https://img.shields.io/badge/Python-3.10-blue)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green)
+![JavaScript](https://img.shields.io/badge/JavaScript-Frontend-yellow)
+![Vercel](https://img.shields.io/badge/Deploy-Vercel-black)
+![Render](https://img.shields.io/badge/Deploy-Render-purple)
+
+Sistema Full Stack para cadastro e análise de dados demográficos, com dashboard interativo e gráfico dinâmico.
 
 ---
 
-## 🚀 Deploy
+## 🚀 Deploy Online
 
-- 🔗 Frontend: https://analise-demografica-frontend2.vercel.app  
-- 🔗 Backend: https://analise-demografica-ibge.onrender.com  
+🔗 **Frontend:**  
+https://analise-demografica-frontend2.vercel.app  
+
+🔗 **Backend API:**  
+https://analise-demografica-ibge.onrender.com  
 
 ---
 
@@ -74,8 +83,20 @@ ou utilize a extensão Live Server no VS Code.
 
 ---
 
+## 🎯 Objetivo do Projeto
+
+Projeto desenvolvido para praticar conceitos de:
+
+- Desenvolvimento Full Stack
+- Integração Frontend ↔ Backend
+- Consumo de API REST
+- Deploy em produção
+- Manipulação de dados e gráficos
+
+---
+
 ## 👨‍💻 Autor
 
 **Luan Martins**
 
-Projeto desenvolvido para prática de desenvolvimento Full Stack.
+Projeto para portfólio e prática profissional.
